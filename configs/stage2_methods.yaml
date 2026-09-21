@@ -12,8 +12,13 @@ budgets:
 fixed_weight:
   class_weights: [0.5, 1.0, 2.0]
   box_weights: [0.5, 1.0, 2.0]
+  selected:
+    confidence: 2.0
+    class: 2.0
+    box: 5.0
+    mask: 1.0
 smoke:
-  methods: [mask_only, joint]
+  methods: [mask_only, joint, fixed_weight, dynamic_weight, constrained]
   epsilon: 0.03137254901960784
   step_size: 0.00392156862745098
   steps: 10
@@ -22,3 +27,12 @@ smoke:
 joint:
   confidence_weight: 1.0
   box_weight: 1.0
+dynamic_weight:
+  initial: 1.0
+  growth: 2.0
+  maximum: 100.0
+constrained:
+  rho_initial: 1.0
+  rho_growth: 1.5
+  rho_max: 1000.0
+  update_interval: 5

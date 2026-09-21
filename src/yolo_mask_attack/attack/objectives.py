@@ -41,3 +41,27 @@ def fixed_weight_objective(
     for name, value in constraints.items():
         loss = loss + weights.get(name, 1.0) * value.clamp_min(0).mean()
     return loss
+
+
+class DynamicWeights:
+    """Increase penalties for currently violated preservation constraints."""
+
+    def __init__(
+        self,
+        names: list[str],
+        *,
+        initial: float = 1.0,
+        growth: float = 2.0,
+        maximum: float = 100.0,
+    ) -> None:
+        self.values = {name: initial for name in names}
+        self.growth = growth
+        self.maximum = maximum
+
+    def update(self, constraints: dict[str, Tensor]) -> None:
+        for name, value in constraints.items():
+            violation = float(value.detach().clamp_min(0).mean().item())
+            if violation > 0:
+                self.values[name] = min(
+                    self.maximum, self.values.get(name, 1.0) * (1.0 + self.growth * violation)
+                )

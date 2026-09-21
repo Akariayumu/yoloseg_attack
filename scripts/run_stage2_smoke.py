@@ -10,10 +10,19 @@ import cv2
 import torch
 from ultralytics.data.augment import LetterBox
 
-from yolo_mask_attack.attack.base import AttackConfig, gradient_step, initialize_delta
+from yolo_mask_attack.attack.base import (
+    AttackConfig,
+    apply_perturbation_mask,
+    gradient_step,
+    initialize_delta,
+)
+from yolo_mask_attack.attack.constraints import ConstraintThresholds, constraint_values
+from yolo_mask_attack.attack.lagrangian import AugmentedLagrangian, LagrangianConfig
 from yolo_mask_attack.attack.objectives import (
+    DynamicWeights,
     Method,
     degradation_objective,
+    fixed_weight_objective,
     joint_attack_objective,
 )
 from yolo_mask_attack.attack.proxy import (
@@ -30,12 +39,12 @@ from yolo_mask_attack.models.wrapper import YoloSegWrapper
 from yolo_mask_attack.utils.seed import seed_everything
 
 
-def prepare_image(path: Path, image_size: int, device: str) -> torch.Tensor:
+def prepare_image(path: Path, image_size: int, device: str) -> tuple[torch.Tensor, torch.Tensor]:
     original = cv2.imread(str(path))
     if original is None:
         raise ValueError(f"Could not read image: {path}")
     resized = LetterBox(new_shape=(image_size, image_size), auto=False, stride=32)(image=original)
-    return (
+    image = (
         torch.from_numpy(resized)
         .to(device)
         .permute(2, 0, 1)
@@ -45,6 +54,14 @@ def prepare_image(path: Path, image_size: int, device: str) -> torch.Tensor:
         .div(255)
         .unsqueeze(0)
     )
+    height, width = original.shape[:2]
+    scale = min(image_size / height, image_size / width)
+    resized_width, resized_height = round(width * scale), round(height * scale)
+    left = round((image_size - resized_width) / 2 - 0.1)
+    top = round((image_size - resized_height) / 2 - 0.1)
+    valid_mask = torch.zeros((1, 1, image_size, image_size), dtype=torch.bool, device=device)
+    valid_mask[:, :, top : top + resized_height, left : left + resized_width] = True
+    return image, valid_mask
 
 
 def scalar_metrics(metrics: dict[str, torch.Tensor]) -> dict[str, float]:
@@ -61,10 +78,29 @@ def optimize(
     attack_config: AttackConfig,
     proxy_radius: int,
     joint_config: dict[str, float],
+    fixed_weights: dict[str, float],
+    dynamic_config: dict[str, float],
+    constrained_config: dict[str, float],
+    thresholds: ConstraintThresholds,
+    perturbation_mask: torch.Tensor,
 ) -> tuple[torch.Tensor, ProxyObservation, float]:
     delta = initialize_delta(image, attack_config.epsilon, attack_config.random_start)
+    delta = apply_perturbation_mask(delta, perturbation_mask)
+    dynamic_weights = DynamicWeights(
+        list(fixed_weights),
+        initial=float(dynamic_config["initial"]),
+        growth=float(dynamic_config["growth"]),
+        maximum=float(dynamic_config["maximum"]),
+    )
+    lagrangian = AugmentedLagrangian(
+        LagrangianConfig(
+            rho_initial=float(constrained_config["rho_initial"]),
+            rho_growth=float(constrained_config["rho_growth"]),
+            rho_max=float(constrained_config["rho_max"]),
+        )
+    )
     started = time.perf_counter()
-    for _ in range(attack_config.steps):
+    for step in range(attack_config.steps):
         raw = wrapper(image + delta)
         decoded = decode_head(raw, wrapper.strides, wrapper.reg_max)
         adversarial = observe_proxy(
@@ -86,9 +122,33 @@ def optimize(
                 confidence_weight=float(joint_config["confidence_weight"]),
                 box_weight=float(joint_config["box_weight"]),
             )
+        elif method in (Method.FIXED_WEIGHT, Method.DYNAMIC_WEIGHT, Method.CONSTRAINED):
+            constraints = constraint_values(
+                clean_confidence=clean.confidence,
+                adversarial_confidence=adversarial.confidence,
+                clean_boxes=clean.box,
+                adversarial_boxes=adversarial.box,
+                clean_masks=clean.mask,
+                adversarial_masks=adversarial.mask,
+                adversarial_logits=adversarial.logits,
+                target_classes=torch.tensor([target_class], device=image.device),
+                thresholds=thresholds,
+            )
+            if method is Method.FIXED_WEIGHT:
+                loss = fixed_weight_objective(metrics["mask_iou"], constraints, fixed_weights)
+            elif method is Method.DYNAMIC_WEIGHT:
+                loss = fixed_weight_objective(
+                    metrics["mask_iou"], constraints, dynamic_weights.values
+                )
+                dynamic_weights.update(constraints)
+            else:
+                loss = lagrangian.loss(degradation_objective(metrics["mask_iou"]), constraints)
+                if (step + 1) % int(constrained_config["update_interval"]) == 0:
+                    lagrangian.update(constraints)
         else:
             raise ValueError(f"Smoke runner does not implement method: {method.value}")
         delta = gradient_step(delta, image, loss, attack_config)
+        delta = apply_perturbation_mask(delta, perturbation_mask)
 
     adversarial_image = (image + delta).detach()
     with torch.no_grad():
@@ -196,7 +256,9 @@ def main() -> int:
     seed = int(base["experiment"]["seed"])
     seed_everything(seed)
     image_path = Path(protocol["dataset"]["images"]) / f"{int(reference['image_id']):012d}.jpg"
-    image = prepare_image(image_path, int(base["model"]["image_size"]), args.device)
+    image, perturbation_mask = prepare_image(
+        image_path, int(base["model"]["image_size"]), args.device
+    )
     wrapper = YoloSegWrapper(base["model"]["weights"], device=args.device)
 
     with torch.no_grad():
@@ -227,6 +289,18 @@ def main() -> int:
         "instance_id": int(reference["instance_id"]),
         "seed": seed,
         "attack": attack_config.__dict__,
+        "valid_pixel_ratio": float(perturbation_mask.float().mean().item()),
+        "sanity": {
+            "zero_perturbation": official_pair_metrics(
+                wrapper,
+                image,
+                image.clone(),
+                clean.box,
+                int(reference["class_id"]),
+                base,
+                protocol,
+            )
+        },
         "methods": {},
     }
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -244,11 +318,23 @@ def main() -> int:
             attack_config,
             int(smoke["proxy_radius"]),
             methods_config["joint"],
+            methods_config["fixed_weight"]["selected"],
+            methods_config["dynamic_weight"],
+            methods_config["constrained"],
+            ConstraintThresholds(
+                confidence_ratio=float(protocol["evaluation"]["confidence_ratio"]),
+                box_iou_min=float(protocol["evaluation"]["box_iou_min"]),
+                mask_iou_max=float(protocol["evaluation"]["mask_iou_max"]),
+            ),
+            perturbation_mask,
         )
         save_image(adversarial_image, args.output_dir / f"{method.value}.png")
         method_payload = {
             "elapsed_seconds": elapsed,
             "linf": float((adversarial_image - image).abs().max().item()),
+            "padding_linf": float(
+                ((adversarial_image - image) * ~perturbation_mask).abs().max().item()
+            ),
             "proxy": scalar_metrics(proxy_metrics(clean, final)),
             "official": official_pair_metrics(
                 wrapper,

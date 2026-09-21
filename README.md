@@ -21,7 +21,7 @@ pytest
 python scripts/run_stage2_smoke.py --steps 10
 ```
 
-该命令从冻结参照集中选择一个实例，分别运行 `mask_only` 和 `joint`，将扰动图片与
+该命令从冻结参照集中选择一个实例，运行五种攻击基线，将扰动图片与
 代理/官方完整推理指标写入 `outputs/stage2_smoke/`。
 
 环境固定为 Python 3.11、PyTorch 2.5.1、TorchVision 0.20.1 和 CUDA 12.1；
@@ -42,5 +42,6 @@ Ultralytics 使用 `repos/models/ultralytics` 的固定浅克隆（8.4.157，com
 
 ## 当前边界
 
-阶段 1 的输出等价、COCO 指标和冻结参照集已经完成。阶段 2 当前打通了单实例
-`mask_only`/`joint` 冒烟链路；批量运行器、fixed/dynamic weight 和约束方法仍待实现。
+阶段 1 的输出等价、COCO 指标和冻结参照集已经完成。阶段 2 已打通单实例
+`mask_only`、`joint`、`fixed_weight`、`dynamic_weight` 和 `constrained` 攻击链路；
+批量运行、对等调参与自适应攻击仍待实现。攻击用于构建 YOLO 防御研究的压力测试。

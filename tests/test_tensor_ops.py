@@ -2,7 +2,7 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from yolo_mask_attack.attack.base import project_linf
+from yolo_mask_attack.attack.base import apply_perturbation_mask, project_linf
 from yolo_mask_attack.models.geometry import box_iou_aligned
 from yolo_mask_attack.models.masks import hard_iou, instance_masks, soft_iou
 
@@ -13,6 +13,16 @@ def test_projection_respects_image_and_linf_bounds() -> None:
     projected = project_linf(delta, image, epsilon=0.1)
     assert torch.all(projected.abs() <= 0.100001)
     assert torch.all((image + projected >= 0) & (image + projected <= 1))
+
+
+def test_perturbation_mask_zeros_padding_and_keeps_gradients() -> None:
+    delta = torch.ones(1, 3, 4, 4, requires_grad=True)
+    mask = torch.zeros(1, 1, 4, 4, dtype=torch.bool)
+    mask[:, :, 1:3, :] = True
+    masked = apply_perturbation_mask(delta, mask)
+    assert masked[:, :, (0, 3), :].count_nonzero() == 0
+    assert masked[:, :, 1:3, :].eq(1).all()
+    assert masked.requires_grad
 
 
 def test_aligned_box_iou_identity() -> None:

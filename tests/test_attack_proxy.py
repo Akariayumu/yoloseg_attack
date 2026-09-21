@@ -2,7 +2,7 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from yolo_mask_attack.attack.objectives import joint_attack_objective
+from yolo_mask_attack.attack.objectives import DynamicWeights, joint_attack_objective
 from yolo_mask_attack.attack.proxy import locate_frozen_candidate
 from yolo_mask_attack.models.types import DecodedBatch
 
@@ -32,3 +32,11 @@ def test_joint_objective_has_expected_weights_and_gradients() -> None:
     assert mask_iou.grad.item() == pytest.approx(1.0)
     assert confidence.grad.item() == pytest.approx(2.0)
     assert box_iou.grad.item() == pytest.approx(3.0)
+
+
+def test_dynamic_weights_only_grow_for_violated_constraints() -> None:
+    weights = DynamicWeights(["box", "class"], initial=1.0, growth=2.0, maximum=3.0)
+    weights.update({"box": torch.tensor([0.5]), "class": torch.tensor([-0.5])})
+    assert weights.values == {"box": 2.0, "class": 1.0}
+    weights.update({"box": torch.tensor([1.0]), "class": torch.tensor([0.0])})
+    assert weights.values == {"box": 3.0, "class": 1.0}

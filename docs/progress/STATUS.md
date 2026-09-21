@@ -1,7 +1,7 @@
 # 当前进度
 
 > 最后更新：2026-09-21
-> 当前阶段：阶段 2 已启动，单实例攻击与完整推理复核链路已打通
+> 当前阶段：阶段 2 五种攻击已打通，准备批量评测后进入防御研究
 
 ## 总览
 
@@ -11,14 +11,14 @@
 | 参考仓库与资料整理 | 完成 | 参考源码和研究资料均已解压 |
 | Conda GPU 环境 | 完成 | V100、PyTorch 2.5.1、CUDA 12.1 验证通过 |
 | Python 工程骨架 | 完成 | 配置、模型、攻击、评测和工具模块已建立 |
-| 基础数值与协议测试 | 完成 | 14 项测试通过，Ruff 与依赖检查通过 |
+| 基础数值与协议测试 | 完成 | 16 项测试通过，Ruff 与依赖检查通过 |
 | 模型权重冻结 | 完成 | 官方 `yolov8n-seg.pt` 已下载并记录 SHA-256 |
 | raw head 解码等价验证 | 完成 | DFL、anchor、NMS 和完整 `predict()` 回归通过 |
 | 官方掩码生成等价验证 | 完成 | 自有掩码与官方 `process_mask` 逐像素一致 |
 | COCO 数据准备 | 完成 | val2017、实例标注、数量与 SHA-256 均已验证 |
 | COCO 参照集 | 完成 | 4681 个实例已冻结，唯一性、阈值与 RLE 校验通过 |
 | COCO 干净指标 | 完成 | 官方 36.7/30.6；person 52.81/39.21 box/mask AP |
-| 攻击与正式实验 | 进行中 | mask-only/joint 单实例冒烟链路通过 |
+| 攻击与正式实验 | 进行中 | 五种单实例攻击通过，三种命中选择性退化 |
 
 ## 已完成产物
 
@@ -40,7 +40,7 @@ GPU             Tesla V100-SXM2-16GB
 Ultralytics     8.4.157 (reference commit 00be778)
 NumPy           1.26.4
 OpenCV          4.11.0
-Tests           14 passed
+Tests           16 passed
 Ruff            passed
 pip check       no broken requirements
 ```
@@ -59,8 +59,10 @@ pip check       no broken requirements
 - [x] 在全部 5000 张 val2017 图片上复现官方和 person box/mask AP。
 - [x] 建立阶段 2 的单实例 clean/attack 成对实验运行器。
 - [x] 运行 mask-only 与 joint attack 单实例冒烟基线。
+- [x] 实现并验证 fixed-weight、dynamic-weight 和 constrained-AL 单实例攻击。
+- [x] 将扰动限制到有效图像区域，并增加零扰动完整推理自检。
 - [ ] 扩展为冻结参照集批量运行、断点续跑和聚合统计。
-- [ ] 实现 fixed-weight、dynamic-weight 和 constrained 方法。
+- [ ] 进行对等超参数搜索，并用强攻击结果作为防御研究基线。
 
 ## 当前阻塞项
 

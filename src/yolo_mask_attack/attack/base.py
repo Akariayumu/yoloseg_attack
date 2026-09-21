@@ -31,3 +31,14 @@ def gradient_step(delta: Tensor, image: Tensor, loss: Tensor, config: AttackConf
         updated = delta - config.step_size * gradient.sign()
         updated = project_linf(updated, image, config.epsilon)
     return updated.detach().requires_grad_(True)
+
+
+def apply_perturbation_mask(delta: Tensor, mask: Tensor) -> Tensor:
+    """Restrict perturbations to a broadcast-compatible binary spatial mask."""
+    if mask.dtype is not torch.bool:
+        raise TypeError("perturbation mask must be boolean")
+    try:
+        masked = delta * mask
+    except RuntimeError as exc:
+        raise ValueError("perturbation mask is not broadcast-compatible with delta") from exc
+    return masked.detach().requires_grad_(True)
