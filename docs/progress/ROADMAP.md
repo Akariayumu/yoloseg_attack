@@ -86,6 +86,11 @@
 置信度 `0.753`、框 IoU `0.906`，将硬 mask IoU 降至 `0.0059`。该结果仅用于链路验证，
 总体结论必须等待冻结参照集批量评测。
 
+批量 pilot：前 5 个冻结实例全部成功运行且断点恢复验证通过。10 步下 dynamic-weight
+SDR/DPR 为 `0.8/0.8`，fixed-weight 为 `0.6/0.8`，constrained-AL 为 `0.2/0.2`。
+constrained-AL 的平均 mask IoU 最低（`0.0478`），但 4/5 因框偏移失败，后续需要调整
+乘子与罚参数调度；该 5 样本结果仅用于工程诊断。
+
 机理分析：
 
 - clean/adv prototype 与 coefficient 四象限互换；

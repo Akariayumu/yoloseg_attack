@@ -1,7 +1,7 @@
 # 当前进度
 
 > 最后更新：2026-09-21
-> 当前阶段：阶段 2 五种攻击已打通，准备批量评测后进入防御研究
+> 当前阶段：阶段 2 五种攻击与可恢复批量运行已打通，正在扩大攻击评测
 
 ## 总览
 
@@ -18,7 +18,7 @@
 | COCO 数据准备 | 完成 | val2017、实例标注、数量与 SHA-256 均已验证 |
 | COCO 参照集 | 完成 | 4681 个实例已冻结，唯一性、阈值与 RLE 校验通过 |
 | COCO 干净指标 | 完成 | 官方 36.7/30.6；person 52.81/39.21 box/mask AP |
-| 攻击与正式实验 | 进行中 | 五种单实例攻击通过，三种命中选择性退化 |
+| 攻击与正式实验 | 进行中 | 批量 pilot 通过，dynamic-weight 暂时最稳 |
 
 ## 已完成产物
 
@@ -40,7 +40,7 @@ GPU             Tesla V100-SXM2-16GB
 Ultralytics     8.4.157 (reference commit 00be778)
 NumPy           1.26.4
 OpenCV          4.11.0
-Tests           16 passed
+Tests           17 passed
 Ruff            passed
 pip check       no broken requirements
 ```
@@ -61,8 +61,9 @@ pip check       no broken requirements
 - [x] 运行 mask-only 与 joint attack 单实例冒烟基线。
 - [x] 实现并验证 fixed-weight、dynamic-weight 和 constrained-AL 单实例攻击。
 - [x] 将扰动限制到有效图像区域，并增加零扰动完整推理自检。
-- [ ] 扩展为冻结参照集批量运行、断点续跑和聚合统计。
+- [x] 扩展为冻结参照集批量运行、断点续跑和聚合统计。
 - [ ] 进行对等超参数搜索，并用强攻击结果作为防御研究基线。
+- [ ] 将 pilot 扩展到更大样本，并修正 constrained-AL 的框保持稳定性。
 
 ## 当前阻塞项
 

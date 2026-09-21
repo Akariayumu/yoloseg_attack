@@ -24,6 +24,15 @@ python scripts/run_stage2_smoke.py --steps 10
 该命令从冻结参照集中选择一个实例，运行五种攻击基线，将扰动图片与
 代理/官方完整推理指标写入 `outputs/stage2_smoke/`。
 
+可断点续跑的批量 pilot：
+
+```bash
+python scripts/run_stage2_batch.py --start 0 --limit 20 --steps 10
+```
+
+逐实例记录写入 `outputs/stage2_batch/records.jsonl`，方法级 SDR、DPR、IoU 和耗时汇总
+写入 `summary.json`。再次运行相同范围会跳过已完成实例。
+
 环境固定为 Python 3.11、PyTorch 2.5.1、TorchVision 0.20.1 和 CUDA 12.1；
 Ultralytics 使用 `repos/models/ultralytics` 的固定浅克隆（8.4.157，commit `00be778`）。
 

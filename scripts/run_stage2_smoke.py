@@ -246,6 +246,7 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/stage2_smoke"))
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--steps", type=int)
+    parser.add_argument("--methods", nargs="+", choices=[method.value for method in Method])
     args = parser.parse_args()
 
     base = load_config(args.base_config)
@@ -305,7 +306,7 @@ def main() -> int:
     }
     args.output_dir.mkdir(parents=True, exist_ok=True)
     save_image(image, args.output_dir / "clean.png")
-    for method_name in smoke["methods"]:
+    for method_name in args.methods or smoke["methods"]:
         seed_everything(seed)
         method = Method(method_name)
         adversarial_image, final, elapsed = optimize(
