@@ -1,0 +1,4 @@
+# Generate a platform-specific, hash-locked file after choosing the CUDA build:
+#   python -m pip install pip-tools
+#   pip-compile --generate-hashes pyproject.toml -o requirements.lock.txt
+# This placeholder intentionally avoids pretending CPU/CUDA wheels are interchangeable.

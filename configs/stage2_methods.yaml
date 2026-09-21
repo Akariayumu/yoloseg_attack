@@ -1,0 +1,14 @@
+methods:
+  - mask_only
+  - joint
+  - fixed_weight
+  - dynamic_weight
+  - constrained
+budgets:
+  epsilons: [0.01568627450980392, 0.03137254901960784]
+  steps: 100
+  seeds: [20260921, 20260922, 20260923]
+  hyperparameter_trials_per_method: 8
+fixed_weight:
+  class_weights: [0.5, 1.0, 2.0]
+  box_weights: [0.5, 1.0, 2.0]

@@ -1,0 +1,45 @@
+version: protocol-v1
+dataset:
+  name: coco-val2017-person
+  images: data/coco/val2017
+  annotations: data/coco/annotations/instances_val2017.json
+  val2017_archive_sha256: 4f7e2ccb2866ec5041993c9cf2a952bbed69647b115d0f74da7ce8f4bef82f05
+  annotations_archive_sha256: 113a836d90195ee1f884e704da6304dfaaecff1f023f49b6ca93c4aaae470268
+  instances_val2017_sha256: e8c7f7908f1d7278341fae127d0da654f102f11bd7b21d8aeefa635b8c810b6f
+  image_count: 5000
+  person_image_count: 2693
+  person_annotation_count: 11004
+  category_ids: [1]
+reference:
+  ground_truth_box_iou_min: 0.5
+  ground_truth_mask_iou_min: 0.75
+  frozen_path: outputs/reference_set_v1.json
+  frozen_sha256: 56d52414997d303f100ee148cd94e7514ff957295adf10c9d2aaf67a764d5b1c
+  frozen_instances: 4681
+  frozen_images: 2156
+evaluation:
+  confidence_ratio: 0.8
+  box_iou_min: 0.9
+  mask_iou_max: 0.5
+  mask_threshold: 0.5
+  matching: greedy_box_iou
+  report_proxy_failure: true
+clean_baseline:
+  official_reference:
+    bbox_ap: 0.367
+    mask_ap: 0.305
+    source: repos/models/ultralytics/docs/en/models/yolov8.md
+  official_cocoeval:
+    metrics_path: outputs/official_coco_metrics.json
+    metrics_sha256: 5d72aa7fd854efb6c2287408080e853a6c8b1d9fbc5c99196d92463b5a1fef22
+    predictions_path: runs/segment/outputs/official_val/predictions.json
+    predictions_sha256: cd91a77a84c3a9963e802c57b4d12a16dcf6b385f5d4db139d046bf2f9be676b
+    bbox_ap: 0.367
+    mask_ap: 0.306
+    acceptance_delta_ap_points: 1.0
+    accepted: true
+  person_cocoeval:
+    metrics_path: outputs/clean_coco_metrics.json
+    metrics_sha256: 4fa5951e0962d912f0149b3d96bb876658fce1cef15bd8fe13e96ba1aad19014
+    bbox_ap: 0.5281011473883749
+    mask_ap: 0.39214481134217694

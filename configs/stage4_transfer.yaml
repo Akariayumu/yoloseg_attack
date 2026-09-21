@@ -1,0 +1,6 @@
+sources: [yolo11n-seg]
+targets: [yolo11s-seg, yolov8n-seg, yolact, mask-rcnn]
+preprocessing:
+  jpeg_quality: [95, 75, 50]
+  scale: [0.5, 0.75]
+  gaussian_sigma: [0.5, 1.0]

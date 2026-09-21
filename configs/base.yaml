@@ -1,0 +1,33 @@
+experiment:
+  name: yolo_mask_selective
+  seed: 20260921
+  output_dir: outputs
+model:
+  weights: weights/yolov8n-seg.pt
+  sha256: a7cd8f929e1903d78a12a48efecab430209f18dc46cb96c3599a5980c63c423c
+  ultralytics_version: 8.4.157
+  ultralytics_commit: 00be77811a04be36bb7cc00b97b9d99b6bb2b42e
+  device: cuda:0
+  image_size: 640
+  retina_masks: false
+  conf_threshold: 0.25
+  iou_threshold: 0.7
+attack:
+  method: constrained
+  epsilon: 0.03137254901960784  # 8/255
+  steps: 100
+  step_size: 0.00392156862745098  # 1/255
+  random_start: true
+  targeted_instance: 0
+constraints:
+  confidence_ratio: 0.8
+  class_margin: 0.0
+  box_iou_min: 0.9
+  mask_iou_max: 0.5
+  tolerance: 0.0001
+lagrangian:
+  outer_steps: 10
+  inner_steps: 10
+  rho_initial: 1.0
+  rho_growth: 1.5
+  rho_max: 1000.0
