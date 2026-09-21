@@ -12,3 +12,13 @@ budgets:
 fixed_weight:
   class_weights: [0.5, 1.0, 2.0]
   box_weights: [0.5, 1.0, 2.0]
+smoke:
+  methods: [mask_only, joint]
+  epsilon: 0.03137254901960784
+  step_size: 0.00392156862745098
+  steps: 10
+  random_start: true
+  proxy_radius: 1
+joint:
+  confidence_weight: 1.0
+  box_weight: 1.0

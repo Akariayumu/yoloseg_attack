@@ -15,11 +15,20 @@ yolo-mask-attack doctor --config configs/base.yaml
 pytest
 ```
 
+阶段 2 单实例冒烟实验：
+
+```bash
+python scripts/run_stage2_smoke.py --steps 10
+```
+
+该命令从冻结参照集中选择一个实例，分别运行 `mask_only` 和 `joint`，将扰动图片与
+代理/官方完整推理指标写入 `outputs/stage2_smoke/`。
+
 环境固定为 Python 3.11、PyTorch 2.5.1、TorchVision 0.20.1 和 CUDA 12.1；
 Ultralytics 使用 `repos/models/ultralytics` 的固定浅克隆（8.4.157，commit `00be778`）。
 
-首次真实模型实验还需要下载官方分割权重，并把路径与 SHA-256 写入配置。优化阶段走
-可微 raw head，最终评测阶段必须走完整 Ultralytics 推理流程。
+官方分割权重、SHA-256、COCO val2017 干净指标和冻结参照集均已验证。优化阶段走
+可微 raw head，最终评测阶段走完整 Ultralytics 推理流程。
 
 ## 目录
 
@@ -33,5 +42,5 @@ Ultralytics 使用 `repos/models/ultralytics` 的固定浅克隆（8.4.157，com
 
 ## 当前边界
 
-代码骨架不声称已经完成 Ultralytics 官方输出等价验证。开始实验前，必须先让
-`test_decode_matches_official.py` 与 `test_mask_equiv_ultralytics.py` 在锁定版本和权重上通过。
+阶段 1 的输出等价、COCO 指标和冻结参照集已经完成。阶段 2 当前打通了单实例
+`mask_only`/`joint` 冒烟链路；批量运行器、fixed/dynamic weight 和约束方法仍待实现。

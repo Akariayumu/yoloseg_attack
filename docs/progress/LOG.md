@@ -81,3 +81,15 @@
 - 官方预测 JSON SHA-256：
   `cd91a77a84c3a9963e802c57b4d12a16dcf6b385f5d4db139d046bf2f9be676b`。
 - 增加并固定官方评估依赖 `faster-coco-eval==1.8.0`。
+
+### 阶段 2：单实例攻击链路
+
+- 新增冻结 feature level/grid 代理定位与邻域跟踪，连接 raw head、prototype/coefficient
+  掩码和可微 box/mask IoU。
+- 新增 `scripts/run_stage2_smoke.py`，统一运行 `mask_only` 与 `joint` PGD，并在攻击后调用
+  官方完整推理进行类别、置信度、框和硬掩码复核。
+- V100 上 10 步、L∞ `8/255` 冒烟结果：`mask_only` 的官方 mask IoU 为 `0.35171`，
+  但类别改变；`joint` 的官方 mask IoU 为 `0.30125`，但目标漏检。两者均未构成选择性退化。
+- 排除运行时间后，同一固定种子的重复运行规范化 SHA-256 一致：
+  `c29b319e4142bcd69ef5f2ac8eb569089c9e242537f25734e1f8892b9075f009`。
+- 新增 2 项代理/目标函数测试，测试总数增至 14 项。

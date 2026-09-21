@@ -18,6 +18,22 @@ def degradation_objective(mask_iou: Tensor) -> Tensor:
     return mask_iou.mean()
 
 
+def joint_attack_objective(
+    mask_iou: Tensor,
+    target_confidence: Tensor,
+    box_iou: Tensor,
+    *,
+    confidence_weight: float = 1.0,
+    box_weight: float = 1.0,
+) -> Tensor:
+    """Minimize mask quality together with detection confidence and box stability."""
+    return (
+        mask_iou.mean()
+        + confidence_weight * target_confidence.mean()
+        + box_weight * box_iou.mean()
+    )
+
+
 def fixed_weight_objective(
     mask_iou: Tensor, constraints: dict[str, Tensor], weights: dict[str, float]
 ) -> Tensor:
