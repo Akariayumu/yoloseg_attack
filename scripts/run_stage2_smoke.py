@@ -25,6 +25,7 @@ from yolo_mask_attack.attack.objectives import (
     fixed_weight_objective,
     joint_attack_objective,
 )
+from yolo_mask_attack.attack.patch import rectangular_patch_mask
 from yolo_mask_attack.attack.proxy import (
     ProxyObservation,
     locate_frozen_candidate,
@@ -247,11 +248,16 @@ def main() -> int:
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--steps", type=int)
     parser.add_argument("--methods", nargs="+", choices=[method.value for method in Method])
+    parser.add_argument("--epsilon", type=float)
+    parser.add_argument("--step-size", type=float)
+    parser.add_argument("--attack-region", choices=["full", "target_patch"], default="full")
+    parser.add_argument("--local-texture-config", type=Path, default=Path("configs/local_texture.yaml"))
     args = parser.parse_args()
 
     base = load_config(args.base_config)
     protocol = load_config(args.protocol_config)
     methods_config = load_config(args.methods_config)
+    local_texture_config = load_config(args.local_texture_config)
     reference_payload = json.loads(args.reference_set.read_text(encoding="utf-8"))
     reference = reference_payload["instances"][args.reference_index]
     seed = int(base["experiment"]["seed"])
@@ -279,17 +285,28 @@ def main() -> int:
 
     smoke = methods_config["smoke"]
     attack_config = AttackConfig(
-        epsilon=float(smoke["epsilon"]),
-        step_size=float(smoke["step_size"]),
+        epsilon=args.epsilon if args.epsilon is not None else float(smoke["epsilon"]),
+        step_size=args.step_size if args.step_size is not None else float(smoke["step_size"]),
         steps=args.steps if args.steps is not None else int(smoke["steps"]),
         random_start=bool(smoke["random_start"]),
     )
+    if args.attack_region == "target_patch":
+        patch = local_texture_config["patch"]
+        perturbation_mask &= rectangular_patch_mask(
+            clean.box,
+            tuple(image.shape[-2:]),
+            width_ratio=float(patch["width_ratio"]),
+            height_ratio=float(patch["height_ratio"]),
+            vertical_position=float(patch["vertical_position"]),
+        )
     payload: dict[str, object] = {
         "reference_index": args.reference_index,
         "image_id": int(reference["image_id"]),
         "instance_id": int(reference["instance_id"]),
         "seed": seed,
         "attack": attack_config.__dict__,
+        "attack_region": args.attack_region,
+        "perturbed_pixel_ratio": float(perturbation_mask.float().mean().item()),
         "valid_pixel_ratio": float(perturbation_mask.float().mean().item()),
         "sanity": {
             "zero_perturbation": official_pair_metrics(

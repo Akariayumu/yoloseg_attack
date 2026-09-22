@@ -1,0 +1,17 @@
+reference:
+  repository: https://github.com/chen37058/Physical-Attacks-in-Embodied-Nav
+  commit: 8991780bec7fc16f1d1b7dfee0f6b41e172ba54c
+  paper: Towards Physically Realizable Adversarial Attacks in Embodied Vision Navigation
+patch:
+  width_ratio: 0.4
+  height_ratio: 0.25
+  vertical_position: 0.4
+  epsilon: 1.0
+  step_size: 0.03137254901960784
+  steps: 100
+  alpha: 1.0
+eot:
+  enabled: false
+  future_transforms: [scale, perspective, brightness, contrast, blur, jpeg]
+defense:
+  future_methods: [patch_localization, local_inpainting, randomized_smoothing, multiview_consistency]

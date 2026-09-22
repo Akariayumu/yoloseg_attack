@@ -10,6 +10,7 @@
 | `alma_prox_segmentation` | jeromerony/alma_prox_segmentation | 1ce75cb | R2 Rony CVPR 2023 | **核心方法参考**：语义分割的增广拉格朗日 + proximal splitting + adaptive masking；本项目约束优化建模直接借鉴 |
 | `alma_iccv2021` | jeromerony/augmented_lagrangian_adversarial_attacks | e1881d2 | ALMA ICCV 2021 | 分类任务的增广拉格朗日攻击原型；乘子/罚参数更新实现的参考 |
 | `jeromerony_adversarial_library` | jeromerony/adversarial-library | 9dec220 | — | 作者通用对抗库（C&W、PGD、距离/投影工具），复刻基线用 |
+| `physical_attacks_embodied_nav` | chen37058/Physical-Attacks-in-Embodied-Nav | 8991780 | Chen et al., IROS 2025 | 可学习纹理/透明度、对象感知多视角采样和物理贴片参考 |
 
 ## models/ — 目标模型与迁移目标
 
