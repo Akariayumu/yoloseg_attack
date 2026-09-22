@@ -28,3 +28,11 @@
 `0.623`、box IoU `0.927`、mask IoU `0.314`，命中选择性退化。非自适应防御中，JPEG
 Q95 将 mask IoU 恢复到 `0.523`，Gaussian sigma=1.0 恢复到 `0.689`，两者均保持目标
 检测。结论仅限单图探索，不能视为防御有效性结论。
+
+## 文献与仓库审查
+
+已完成位置搜索、日常服装纹理、两阶段透明度、EOT 及相关防御的系统调查。报告、证据表、
+威胁模型和分阶段实现路线见
+[`docs/research/stealth_local_texture_defense/`](../research/stealth_local_texture_defense/README.md)。
+结论是洁净重写最小模块，不把旧版 3D/检测框架直接并入稳定环境；下一步先执行 M0/M1，
+即协议冻结、位置搜索和 2D EOT，再进行自适应防御复核。

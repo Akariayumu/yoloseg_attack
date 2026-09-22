@@ -91,6 +91,10 @@ SDR/DPR 为 `0.8/0.8`，fixed-weight 为 `0.6/0.8`，constrained-AL 为 `0.2/0.2
 constrained-AL 的平均 mask IoU 最低（`0.0478`），但 4/5 因框偏移失败，后续需要调整
 乘子与罚参数调度；该 5 样本结果仅用于工程诊断。
 
+局部纹理分支已完成防御导向文献与仓库审查，形成独立的
+[`威胁模型、证据表和实现路线`](../research/stealth_local_texture_defense/README.md)。下一实现闸门为
+服装可行域内的位置搜索和 2D EOT；所有防御主结论要求在 BPDA/EOT 自适应攻击下复核。
+
 机理分析：
 
 - clean/adv prototype 与 coefficient 四象限互换；
