@@ -2,6 +2,8 @@
 
 在类别、置信度和检测框基本不变的前提下，对 YOLO 实例分割掩码进行选择性退化。
 
+重新启动研究或开启新会话时，先阅读 [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md)。
+
 当前仓库是阶段 1–2 的代码骨架，包含统一配置、可微掩码与几何算子、约束定义、
 增广拉格朗日攻击循环、评测分类和可复现工具。`repos/` 中的第三方仓库仅作参考，
 不作为本项目源码的一部分。
@@ -47,10 +49,14 @@ Ultralytics 使用 `repos/models/ultralytics` 的固定浅克隆（8.4.157，com
 - `src/yolo_mask_attack/eval/`：参照集、匹配、互斥分类与指标。
 - `tests/`：不变量与数值回归测试。
 - `docs/progress/`：当前进度、阶段路线图和工作日志。
+- `docs/research/stealth_local_texture_defense/`：隐蔽局部纹理与防御调查、威胁模型和实现路线。
+- `PROJECT_CONTEXT.md`：跨会话接续摘要和下一步入口。
 - `CODE_IMPLEMENTATION.md`：完整实现规格。
 
 ## 当前边界
 
 阶段 1 的输出等价、COCO 指标和冻结参照集已经完成。阶段 2 已打通单实例
 `mask_only`、`joint`、`fixed_weight`、`dynamic_weight` 和 `constrained` 攻击链路；
-批量运行、对等调参与自适应攻击仍待实现。攻击用于构建 YOLO 防御研究的压力测试。
+批量运行与断点续跑已经实现，对等调参与自适应攻击仍待完成。局部纹理攻击已通过单图
+可行性验证，并完成防御导向文献调查；下一步是协议冻结、位置搜索和 2D EOT。攻击用于
+构建 YOLO 防御研究的压力测试。
